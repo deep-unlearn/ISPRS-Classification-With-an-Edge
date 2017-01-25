@@ -1,0 +1,21 @@
+
+=========================== INFO ===========================
+
+
+  Various tools for data construction and manipulation
+
+  	  - Random patch extraction
+
+	  - Storing of images, labels, DSMs, nDSM,
+
+	  - HDF5 data construction
+
+	  - LMDB data construction
+
+	  - Count number of parameters in fully-convolutional networks
+
+	  - Convert data from LMDB to TIFF
+
+	  - Convert TIFF data into LMDB
+	  
+	  
