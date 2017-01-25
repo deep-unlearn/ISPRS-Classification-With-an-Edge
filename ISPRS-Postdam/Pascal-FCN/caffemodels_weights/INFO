@@ -1,0 +1,23 @@
+
+# ============== INFO ============== #
+
+This url containlinks to the weights of the trained caffe-models over the ISPRS-Postdam benchmark
+The weights were initialized with the following model
+
+    - Class-Boundaries part of the model	----> DSD HED model  [1]
+
+    - Annotation part of the network 		----> Long john FCN-Pascal [2]
+ 
+
+TODO: 
+      * Upload caffemodel weights to a different sever for sharing 
+
+
+
+
+
+[1]   Xie, S., & Tu, Z. (2015). Holistically-nested edge detection. 
+      In Proceedings of the IEEE International Conference on Computer Vision (pp. 1395-1403).
+
+[2]   Long, J., Shelhamer, E., & Darrell, T. (2015). Fully convolutional networks for semantic segmentation. 
+      In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (pp. 3431-3440).
