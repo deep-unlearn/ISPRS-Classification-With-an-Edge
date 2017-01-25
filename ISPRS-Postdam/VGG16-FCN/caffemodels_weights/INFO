@@ -1,0 +1,22 @@
+
+# ============== INFO ============== #
+
+This url containlinks to the weights of the trained caffe-models over the ISPRS-Postdam benchmark
+The weights were initialized with the following model
+
+    - Class-Boundaries part of the model	----> BSD-HED model  [1]
+
+    - Annotation part of the network 		----> VGG-16 [2]
+ 
+
+TODO: 
+      * Upload caffemodel weights to a different sever for sharing 
+
+
+
+
+	[1]   Xie, S., & Tu, Z. (2015). Holistically-nested edge detection. 
+	      In Proceedings of the IEEE International Conference on Computer Vision (pp. 1395-1403).
+
+	[2]   Very Deep Convolutional Networks for Large-Scale Image Recognition K. Simonyan, A. Zisserman
+	      arXiv:1409.1556
