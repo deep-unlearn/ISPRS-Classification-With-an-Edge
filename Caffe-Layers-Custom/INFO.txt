@@ -1,0 +1,12 @@
+
+============================ INFO ============================
+
+These are cuctom-made Python-Layers in Caffe. They require you to have compile 
+PyCaffe with PythonLayer parameter enabled !!!
+
+Also you have to append the location you store the file into your PYTHONPATH eviroment variable for this to work.
+
+    ----  Methods ----
+
+    	  - Realtime stostastic data-augmentation ---> currently works with batch size equal to 1. 
+	    Augmentation hyperpameters are definied inside the the PYTHONLAYER and not in the prototxt  
