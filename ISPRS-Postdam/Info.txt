@@ -1,0 +1,6 @@
+
+======================= INFO =======================
+
+This is the complete training-model for ISPRS Postdam 
+Benchmark along with respective trained weight-models.
+
