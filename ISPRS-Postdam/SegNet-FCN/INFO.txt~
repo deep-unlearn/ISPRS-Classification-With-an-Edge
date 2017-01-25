@@ -1,0 +1,15 @@
+
+============== INFO =============
+
+This CAFFE Model runs over the architecture of [1] with additional modification
+
+     1. Multiscale approach of 3 parallel networks
+     2. Additional cost funtions
+     3. Considers class-countours (class-boundaries) in cummulative architecture
+
+
+
+
+     [1] Badrinarayanan, V., Kendall, A., & Cipolla, R. (2015). 
+     	 Segnet: A deep convolutional encoder-decoder architecture 
+	 for image segmentation. arXiv preprint arXiv:1511.00561.
