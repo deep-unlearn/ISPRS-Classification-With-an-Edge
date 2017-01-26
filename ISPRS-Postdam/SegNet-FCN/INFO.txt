@@ -7,7 +7,13 @@ This CAFFE Model runs over the architecture of [1] with additional modification
      2. Additional cost funtions
      3. Considers class-countours (class-boundaries) in cummulative architecture
 
-
+     IMPORTANT : 
+     	
+	This code to work requires the installation of the original SegNEt Caffe repository. 
+	This is quite outdated but all dependecies are available. Instructions for this 
+	repocitory can be found at:
+	
+		https://github.com/alexgkendall/caffe-segnet
 
 
      [1] Badrinarayanan, V., Kendall, A., & Cipolla, R. (2015). 
