@@ -14,6 +14,19 @@ import pdb
 import os
 
 
+"""
+INFO
+
+This script runs inference of a set of images (and respective DEM data) using a caffe model 
+and  a predefined stride value.
+The input parameters are defined in __main__ method - so user should check this out before
+running the script.
+
+Important - mean subtraction per-band is disabled as generally does not perform well over
+unseen data
+
+"""
+
 def sequential_image_loader(path_to_folder, index_reader):
     """
 
