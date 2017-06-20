@@ -2,11 +2,12 @@ __author__ = 'dmarmanis'
 from sklearn.feature_extraction.image import extract_patches_2d as patch_extractor
 import matplotlib
 
-matplotlib.use('Agg')  # to avoid problems in servers with no dispay variables
+#matplotlib.use('Agg')  # to avoid problems in servers with no dispay variables
 import matplotlib.pyplot as plt
 from itertools import product
 import h5py as h5
-from PIL import Image
+#from PIL import Image  # not loading all image-extent properly
+from osgeo import gdal
 import numpy as np
 import caffe
 import shutil
@@ -15,8 +16,6 @@ import os
 
 
 """
-INFO
-
 This script runs inference of a set of images (and respective DEM data) using a caffe model 
 and  a predefined stride value.
 The input parameters are defined in __main__ method - so user should check this out before
@@ -53,13 +52,19 @@ def sequential_image_loader(path_to_folder, index_reader):
     # find image to be returned in this call
     image_to_read = list_of_images[index_reader]
 
-    # read in image
-    current_image = Image.open(os.path.join(path_to_folder, image_to_read))
-    img = np.array(current_image)
-    # print image_to_read
+    # read in image - using PIL ---> Images are not loaded always correct
+    #current_image = Image.open(os.path.join(path_to_folder, image_to_read))
+    #img = np.array(current_image)
+
+    # Use GDAL to load in images
+    data = gdal.Open(os.path.join(path_to_folder, image_to_read), gdal.GA_ReadOnly)
+    img = data.ReadAsArray()  # (bands, xdim, ydim)
+
+    # flip axis if image is multispectral
+    if img.ndim > 2:
+        img = np.swapaxes(np.swapaxes(img, 0, 2), 0, 1)  # flip axis to make (xdim, ydim, bands) image
 
     if img.ndim > 2:
-
         # read as BGR as in training data
         img = img[:, :, ::-1]
 
@@ -107,8 +112,7 @@ def image_preprocessing(img_data,
 # code modification to reconstruct patches back by summing them
 
 
-def reconstruct_from_patches_2d(patches,
-                                image_size):
+def reconstruct_from_patches_2d(patches,image_size):
     """
 
     Reconstruct the image from all of its patches.
@@ -155,9 +159,10 @@ def image_padder(image,
                  patch_size):
     """
 
-    This function naively pads the image with half the size patch-size
+    This function naively pads the image with a complete size patch-size
     in this way it is assured all the pixels of the image to be visited at least ones
-    Maybe smaller pad is enough but in this naive way an invetigation of the image dimensions is unnesessary
+    Maybe smaller pad is enough but in this naive way an investigation of the 
+    image dimensions is unnesessary
 
     :param image: image to be padeed
     :param dem:  dem data to be padded
@@ -166,20 +171,73 @@ def image_padder(image,
 
     """
 
-    padding_size = 2 * patch_size
+    padding_size = patch_size  # 2 * patch_size
 
     padded_image = np.zeros((image.shape[0] + padding_size,
                              image.shape[1] + padding_size, image.shape[2]),
                             dtype='float32')
     padded_image[0: image.shape[0], 0:image.shape[1], :] = image
 
-    padded_dsm = np.zeros((dsm.shape[0] + padding_size,
-                           dsm.shape[1] + padding_size), dtype='float32')
+    # --------------- Mirroring Image---------------------------- #
+
+    # mirror last row pixels in pad-areas
+    x_pad = image[-padding_size:, :, :]
+    # mirror horizontaly
+    x_pad = x_pad[::-1, :, :]
+
+    y_pad = image[:, -padding_size:, :]
+    # mirror vertically
+    y_pad = y_pad[:, ::-1, :]
+
+    xy_corner = x_pad[:, -padding_size:, :]
+    xy_corner = xy_corner[:, ::-1, :]
+
+    # add mirror data to padded image
+    padded_image[image.shape[0]:, :image.shape[1], :] = x_pad[:]
+    padded_image[:image.shape[0], image.shape[1]:, :] = y_pad[:]
+    padded_image[image.shape[0]:, image.shape[1]:, :] = xy_corner[:]
+
+    # --------------- Mirorring DEMs ---------------------- #
+
+    padded_dsm = np.zeros((dsm.shape[0] + padding_size, dsm.shape[1] + padding_size), dtype='float32')
     padded_dsm[0: dsm.shape[0], 0:dsm.shape[1]] = dsm
 
-    padded_ndsm = np.zeros((ndsm.shape[0] + padding_size,
-                            ndsm.shape[1] + padding_size), dtype='float32')
+    # mirror last row pixels in pad-areas
+    x_pad = dsm[-padding_size:, :]
+    # mirror horizontaly
+    x_pad = x_pad[::-1, :]
+
+    y_pad = dsm[:, -padding_size:]
+    # mirror vertically
+    y_pad = y_pad[:, ::-1]
+
+    xy_corner = x_pad[:, -padding_size:]
+    xy_corner = xy_corner[:, ::-1]
+
+    # add mirror data to padded dsm
+    padded_dsm[dsm.shape[0]:, :dsm.shape[1]] = x_pad[:]
+    padded_dsm[:dsm.shape[0], dsm.shape[1]:] = y_pad[:]
+    padded_dsm[dsm.shape[0]:, dsm.shape[1]:] = xy_corner[:]
+
+    padded_ndsm = np.zeros((ndsm.shape[0] + padding_size, ndsm.shape[1] + padding_size), dtype='float32')
     padded_ndsm[0: ndsm.shape[0], 0:ndsm.shape[1]] = ndsm
+
+    # mirror last row pixels in pad-areas
+    x_pad = ndsm[-padding_size:, :]
+    # mirror horizontaly
+    x_pad = x_pad[::-1, :]
+
+    y_pad = ndsm[:, -padding_size:]
+    # mirror vertically
+    y_pad = y_pad[:, ::-1]
+
+    xy_corner = x_pad[:, -padding_size:]
+    xy_corner = xy_corner[:, ::-1]
+
+    # add mirror data to padded dsm
+    padded_ndsm[ndsm.shape[0]:, :ndsm.shape[1]] = x_pad[:]
+    padded_ndsm[:ndsm.shape[0], ndsm.shape[1]:] = y_pad[:]
+    padded_ndsm[ndsm.shape[0]:, ndsm.shape[1]:] = xy_corner[:]
 
     return padded_image, padded_dsm, padded_ndsm
 
@@ -188,14 +246,14 @@ def image_depadder(image, patch_size):
     # this function de-pads the image which is introduced by
     # method "image_padder" (look above method)
 
-    deppader_size = 2 * patch_size
+    deppader_size = patch_size # 2 * patch_size
 
     image = image[:-deppader_size, :-deppader_size, :]
 
     return image
 
 
-def model_loader(list_of_models,list_of_weights):
+def model_loader(list_of_models, list_of_weights, gpu_device):
     """
 
     :param list_of_models:
@@ -206,7 +264,7 @@ def model_loader(list_of_models,list_of_weights):
     """
     # set uo gpu parameters
     caffe.set_mode_gpu()
-    caffe.set_device(0)
+    caffe.set_device(gpu_device)
 
     # load model and initialize
     solver = caffe.SGDSolver(list_of_models)
@@ -421,8 +479,6 @@ def model_inference(solver,
                 # score_patches[i_batch, :, :, :] = solver.net.blobs['score'].data[:, :5, :, :]
                 score_patches[i_batch, :, :, :] = solver.net.blobs['prob'].data[:, :5, :, :]
 
-                # TO DELETE score_patches = score_patches[:,:3,:,:]
-                # TO DELETE score_patches[i_batch] = np.rollaxis(row_image_patches, 2,3)[i_batch]
 
             # reshape to scikit learn standards (b,0,1,c)
             score_patches = np.rollaxis(score_patches, 1, 4)
@@ -459,7 +515,8 @@ def cumulative_model_inference(path_to_folder_with_images,
                                stride_value,
                                img_scaler,
                                dsm_scaler,
-                               save_visualizations=False):
+                               save_visualizations=False,
+                               gpu_device=0):
     """
     THis method applied sequential inference and recostruction of data from patches to a set of models
     and summs up their individual score maps
@@ -482,6 +539,11 @@ def cumulative_model_inference(path_to_folder_with_images,
             num_of_images += 1
 
     # ========================== SEQUENTIAL PROCESSING ============================ #
+
+    # Load CAFFE model
+    solver_model = model_loader(list_of_models=model_list,
+                                list_of_weights=weight_list,
+                                gpu_device=gpu_device)
 
     # loop number of images number of
     for i in range(num_of_images):
@@ -509,62 +571,38 @@ def cumulative_model_inference(path_to_folder_with_images,
                                           complete_image.shape[1], 5),
                                          dtype='float32')
 
-        # loop through each model and compute inference
-        for i_model in range(len(model_list)):
-            solver_model = model_loader(list_of_models=model_list,
-                                        list_of_weights=weight_list)
+        # loop through the various models and perform inference
+        image_scores = model_inference(solver=solver_model,
+                                       image_for_inference=complete_image,
+                                       dsm_for_inference=complete_dsm,
+                                       ndsm_for_inference=complete_ndsm,
+                                       size_of_patches=patch_size,
+                                       stride_step=stride_value,
+                                       image_mean=image_mean,
+                                       dsm_mean=dsm_mean,
+                                       ndsm_mean=ndsm_mean,
+                                       img_scaler=img_scaler,
+                                       dsm_scaler=dsm_scaler)
 
-            # loop through the various models and perform inference
-            image_scores = model_inference(solver=solver_model,
-                                           image_for_inference=complete_image,
-                                           dsm_for_inference=complete_dsm,
-                                           ndsm_for_inference=complete_ndsm,
-                                           size_of_patches=patch_size,
-                                           stride_step=stride_value,
-                                           image_mean=image_mean,
-                                           dsm_mean=dsm_mean,
-                                           ndsm_mean=ndsm_mean,
-                                           img_scaler=img_scaler,
-                                           dsm_scaler=dsm_scaler)
-
-            save_name_string = img_list[save_data_index]
-
-            if save_visualizations is True:
-                # save image outcomes
-                image_saver_semantics(model_scores=image_scores,
-                                      save_folder=os.path.join(img_save_data_path[i_model],
-                                                               str(save_name_string)),
-                                      image_vis=complete_image,
-                                      dem_vis=complete_dsm,
-                                      vmin=0,
-                                      vmax=6)
-
-            # save scores in hdf5 format matrix
-            hdf5_score_saver(score_matrix=image_scores,
-                             save_data_path=os.path.join(hdf5_save_data_path[i_model],
-                                                         str(save_name_string)),
-                             naming_string_file=string_names[i_model],
-                             attribute_name=hdf5_attributes[i_model])
-
-            # accumulate all models scores
-            cumulative_img_scores += image_scores
+        # saving string name - remove img type from string
+        save_name_string = img_list[save_data_index].split(".", 1)[0]
 
         if save_visualizations is True:
-            # save cumulative image scores
-            image_saver_semantics(model_scores=cumulative_img_scores,
-                                  save_folder=os.path.join(img_save_data_path[i_model + 1],
+            # save image outcomes
+            image_saver_semantics(model_scores=image_scores,
+                                  save_folder=os.path.join(img_save_data_path,
                                                            str(save_name_string)),
                                   image_vis=complete_image,
                                   dem_vis=complete_dsm,
                                   vmin=0,
                                   vmax=6)
 
-        # save cummulative scores in hdf5 matrix
-        hdf5_score_saver(score_matrix=cumulative_img_scores,
-                         save_data_path=os.path.join(hdf5_save_data_path[i_model + 1],
+        # save scores in hdf5 format matrix
+        hdf5_score_saver(score_matrix=image_scores,
+                         save_data_path=os.path.join(hdf5_save_data_path,
                                                      str(save_name_string)),
-                         naming_string_file=string_names[i_model + 1],
-                         attribute_name=hdf5_attributes[i_model + 1])
+                         naming_string_file=string_names,
+                         attribute_name=hdf5_attributes)
 
         # increase save folder index
         save_data_index += 1
@@ -581,8 +619,9 @@ if __name__ == '__main__':
 
     # ======================== SET INFERENCE INPUTS =============== #
 
-    patch_size = 256
-    stride = 220
+    patch_size = 256  # standardize patch size from training a network
+    stride = 150  # overlapping stride for annotation-inference
+    gpu_device = 1  # index of gpu to be used
 
     # take this values from TRAINING prototxt
     dsm_value_scaler = 0.003333333
@@ -591,25 +630,24 @@ if __name__ == '__main__':
     # This will create graphics of all inferred data
     generate_visualizations = True
 
-    path_to_folder_with_images = '...path to folder with images'
-    path_to_folder_with_DSMs = '...path to folder with DSM'
-    path_to_folder_with_nDSMs = "...path to folder with nDSM"
+    path_to_folder_with_images = '... path to folder with images'
+    path_to_folder_with_DSMs = '... path to folder with DEMs'
+    path_to_folder_with_nDSMs = '... path to folder with nDSMs'
 
     # inference models
     #  -------- MODEL NET PARAMETERS -------- #
-    model_solver_path = '...path to folder with solver'
-    model_solver = '...name of solver'
+    model_solver_path = '... path to solver'
+    model_solver = '... solver file'
 
-    model_weights_path = '...path to folder with weights'
-    model_weights = '... weights name caffemodel'
+    model_weights_path = '... path to folder with networks weights'
+    model_weights = '... weights file'
 
     model_save_string_name = 'segnet_scores'
-
     model_attribute_hdf5_name = 'segnet_scores'
 
     # create storing folders if do not exist
-    annot_image_dir = './annotated_image' + str(stride) + '_pix_overlap'
-    h5_save_data_dir = './h5_data' + str(stride) + '_pix_overlap'
+    annot_image_dir = './annotated_image_' + str(stride) + '_pix_overlap'
+    h5_save_data_dir = './h5_data_' + str(stride) + '_pix_overlap'
 
     if not os.path.exists(annot_image_dir):
         os.makedirs(annot_image_dir)
@@ -631,4 +669,5 @@ if __name__ == '__main__':
                                hdf5_save_data_path=h5_save_data_dir,
                                string_names=model_save_string_name,
                                hdf5_attributes=model_attribute_hdf5_name,
-                               save_visualizations=generate_visualizations)
+                               save_visualizations=generate_visualizations,
+                               gpu_device=gpu_device)
