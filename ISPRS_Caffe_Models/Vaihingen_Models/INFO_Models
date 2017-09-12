@@ -1,0 +1,84 @@
+
+
+===============================================
+		FCN-Vaihingen-Model
+===============================================
+
+	- Input size of data 259x259 pixels
+
+	Data for training :	
+
+	     	image-lmdb
+		dsm-lmdb
+		dsm-lmdb
+		labels-lmdb
+		class-boundaries-lmdb
+		
+
+	- Inference size 259x259 pixels
+
+	Data for inference :	
+
+	     	image-lmdb
+		dsm-lmdb
+		dsm-lmdb
+
+
+===============================================
+		VGG-Vaihingen-Model
+===============================================
+
+	- Input size of data 259x259 pixels
+
+	Data for training :	
+
+	     	image-lmdb
+		dsm-lmdb
+		dsm-lmdb
+		labels-lmdb
+		class-boundaries-lmdb
+		
+
+	- Inference size 259x259 pixels
+
+	Data for inference :	
+
+	     	image-lmdb
+		dsm-lmdb
+		dsm-lmdb
+
+===============================================
+		SegNet-Vaihingen-Model
+===============================================
+
+	- Input size of data 256x256 pixels
+
+	Data for training :	
+
+	     	image-lmdb
+		dsm-lmdb
+		dsm-lmdb
+		labels-lmdb
+		class-boundaries-lmdb
+		
+
+	- Inference size 256x256 pixels
+
+	Data for inference :	
+
+	     	image-lmdb
+		dsm-lmdb
+		dsm-lmdb
+
+
+
+
+
+
+
+
+
+
+
+
+

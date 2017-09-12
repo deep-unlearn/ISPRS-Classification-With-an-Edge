@@ -1,0 +1,3275 @@
+name: "CB-VGG-Deploy"
+
+input: 'image'
+input_dim: 1
+input_dim: 3
+input_dim: 256
+input_dim: 256
+
+input: 'dsm'
+input_dim: 1
+input_dim: 1
+input_dim: 256
+input_dim: 256
+
+input: 'ndsm'
+input_dim: 1
+input_dim: 1
+input_dim: 256
+input_dim: 256
+
+force_backward: true
+
+
+############################# Concatenate nDSM and DSM   ##############################
+
+layer {
+  name: "dem-componets"
+  type: "Concat"
+  bottom: "dsm"
+  bottom: "ndsm"
+  top: "dem"
+}
+
+
+################## Edge Model Inference #######################
+
+
+layer {
+  name: "edge_dem_conv1_1_"
+  type: "Convolution"
+  bottom: "dem"
+  top: "ee_dem_conv1_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 35
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "edge_conv1_1"
+  type: "Convolution"
+  bottom: "image"
+  top: "ee_data_conv1_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 35
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu1_1"
+  type: "ReLU"
+  bottom: "ee_data_conv1_1"
+  top: "ee_data_conv1_1"
+}
+layer {
+  name: "dem_relu1_1"
+  type: "ReLU"
+  bottom: "ee_dem_conv1_1"
+  top: "ee_dem_conv1_1"
+}
+layer {
+  name: "edge_conv1_2"
+  type: "Convolution"
+  bottom: "ee_data_conv1_1"
+  top: "ee_data_conv1_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv1_2_"
+  type: "Convolution"
+  bottom: "ee_dem_conv1_1"
+  top: "ee_dem_conv1_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu1_2"
+  type: "ReLU"
+  bottom: "ee_data_conv1_2"
+  top: "ee_data_conv1_2"
+}
+layer {
+  name: "dem_relu1_2"
+  type: "ReLU"
+  bottom: "ee_dem_conv1_2"
+  top: "ee_dem_conv1_2"
+}
+layer {
+  name: "data_pool1"
+  type: "Pooling"
+  bottom: "ee_data_conv1_2"
+  top: "ee_data_pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "dem_pool1"
+  type: "Pooling"
+  bottom: "ee_dem_conv1_2"
+  top: "ee_dem_pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "edge_conv2_1"
+  type: "Convolution"
+  bottom: "ee_data_pool1"
+  top: "ee_data_conv2_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv2_1_"
+  type: "Convolution"
+  bottom: "ee_dem_pool1"
+  top: "ee_dem_conv2_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu2_1"
+  type: "ReLU"
+  bottom: "ee_data_conv2_1"
+  top: "ee_data_conv2_1"
+}
+layer {
+  name: "dem_relu2_1"
+  type: "ReLU"
+  bottom: "ee_dem_conv2_1"
+  top: "ee_dem_conv2_1"
+}
+layer {
+  name: "edge_conv2_2"
+  type: "Convolution"
+  bottom: "ee_data_conv2_1"
+  top: "ee_data_conv2_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv2_2_"
+  type: "Convolution"
+  bottom: "ee_dem_conv2_1"
+  top: "ee_dem_conv2_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu2_2"
+  type: "ReLU"
+  bottom: "ee_data_conv2_2"
+  top: "ee_data_conv2_2"
+}
+layer {
+  name: "dem_relu2_2"
+  type: "ReLU"
+  bottom: "ee_dem_conv2_2"
+  top: "ee_dem_conv2_2"
+}
+layer {
+  name: "data_pool2"
+  type: "Pooling"
+  bottom: "ee_data_conv2_2"
+  top: "ee_data_pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "dem_pool2"
+  type: "Pooling"
+  bottom: "ee_dem_conv2_2"
+  top: "ee_dem_pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "edge_conv3_1"
+  type: "Convolution"
+  bottom: "ee_data_pool2"
+  top: "ee_data_conv3_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv3_1_"
+  type: "Convolution"
+  bottom: "ee_dem_pool2"
+  top: "ee_dem_conv3_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu3_1"
+  type: "ReLU"
+  bottom: "ee_data_conv3_1"
+  top: "ee_data_conv3_1"
+}
+layer {
+  name: "dem_relu3_1"
+  type: "ReLU"
+  bottom: "ee_dem_conv3_1"
+  top: "ee_dem_conv3_1"
+}
+layer {
+  name: "edge_conv3_2"
+  type: "Convolution"
+  bottom: "ee_data_conv3_1"
+  top: "ee_data_conv3_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv3_2_"
+  type: "Convolution"
+  bottom: "ee_dem_conv3_1"
+  top: "ee_dem_conv3_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu3_2"
+  type: "ReLU"
+  bottom: "ee_data_conv3_2"
+  top: "ee_data_conv3_2"
+}
+layer {
+  name: "dem_relu3_2"
+  type: "ReLU"
+  bottom: "ee_dem_conv3_2"
+  top: "ee_dem_conv3_2"
+}
+layer {
+  name: "edge_conv3_3"
+  type: "Convolution"
+  bottom: "ee_data_conv3_2"
+  top: "ee_data_conv3_3"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv3_3_"
+  type: "Convolution"
+  bottom: "ee_dem_conv3_2"
+  top: "ee_dem_conv3_3"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu3_3"
+  type: "ReLU"
+  bottom: "ee_data_conv3_3"
+  top: "ee_data_conv3_3"
+}
+layer {
+  name: "dem_relu3_3"
+  type: "ReLU"
+  bottom: "ee_dem_conv3_3"
+  top: "ee_dem_conv3_3"
+}
+layer {
+  name: "data_pool3"
+  type: "Pooling"
+  bottom: "ee_data_conv3_3"
+  top: "ee_data_pool3"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "dem_pool3"
+  type: "Pooling"
+  bottom: "ee_dem_conv3_3"
+  top: "ee_dem_pool3"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "edge_conv4_1"
+  type: "Convolution"
+  bottom: "ee_data_pool3"
+  top: "ee_data_conv4_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv4_1_"
+  type: "Convolution"
+  bottom: "ee_dem_pool3"
+  top: "ee_dem_conv4_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu4_1"
+  type: "ReLU"
+  bottom: "ee_data_conv4_1"
+  top: "ee_data_conv4_1"
+}
+layer {
+  name: "dem_relu4_1"
+  type: "ReLU"
+  bottom: "ee_dem_conv4_1"
+  top: "ee_dem_conv4_1"
+}
+layer {
+  name: "edge_conv4_2"
+  type: "Convolution"
+  bottom: "ee_data_conv4_1"
+  top: "ee_data_conv4_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv4_2_"
+  type: "Convolution"
+  bottom: "ee_dem_conv4_1"
+  top: "ee_dem_conv4_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu4_2"
+  type: "ReLU"
+  bottom: "ee_data_conv4_2"
+  top: "ee_data_conv4_2"
+}
+layer {
+  name: "dem_relu4_2"
+  type: "ReLU"
+  bottom: "ee_dem_conv4_2"
+  top: "ee_dem_conv4_2"
+}
+layer {
+  name: "edge_conv4_3"
+  type: "Convolution"
+  bottom: "ee_data_conv4_2"
+  top: "ee_data_conv4_3"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv4_3_"
+  type: "Convolution"
+  bottom: "ee_dem_conv4_2"
+  top: "ee_dem_conv4_3"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu4_3"
+  type: "ReLU"
+  bottom: "ee_data_conv4_3"
+  top: "ee_data_conv4_3"
+}
+layer {
+  name: "dem_relu4_3"
+  type: "ReLU"
+  bottom: "ee_dem_conv4_3"
+  top: "ee_dem_conv4_3"
+}
+layer {
+  name: "data_pool4"
+  type: "Pooling"
+  bottom: "ee_data_conv4_3"
+  top: "ee_data_pool4"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "dem_pool4"
+  type: "Pooling"
+  bottom: "ee_dem_conv4_3"
+  top: "ee_dem_pool4"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "edge_conv5_1"
+  type: "Convolution"
+  bottom: "ee_data_pool4"
+  top: "ee_data_conv5_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv5_1_"
+  type: "Convolution"
+  bottom: "ee_dem_pool4"
+  top: "ee_dem_conv5_1"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu5_1"
+  type: "ReLU"
+  bottom: "ee_data_conv5_1"
+  top: "ee_data_conv5_1"
+}
+layer {
+  name: "dem_relu5_1"
+  type: "ReLU"
+  bottom: "ee_dem_conv5_1"
+  top: "ee_dem_conv5_1"
+}
+layer {
+  name: "edge_conv5_2"
+  type: "Convolution"
+  bottom: "ee_data_conv5_1"
+  top: "ee_data_conv5_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv5_2_"
+  type: "Convolution"
+  bottom: "ee_dem_conv5_1"
+  top: "ee_dem_conv5_2"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu5_2"
+  type: "ReLU"
+  bottom: "ee_data_conv5_2"
+  top: "ee_data_conv5_2"
+}
+layer {
+  name: "dem_relu5_2"
+  type: "ReLU"
+  bottom: "ee_dem_conv5_2"
+  top: "ee_dem_conv5_2"
+}
+layer {
+  name: "edge_conv5_3"
+  type: "Convolution"
+  bottom: "ee_data_conv5_2"
+  top: "ee_data_conv5_3"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_dem_conv5_3_"
+  type: "Convolution"
+  bottom: "ee_dem_conv5_2"
+  top: "ee_dem_conv5_3"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "data_relu5_3"
+  type: "ReLU"
+  bottom: "ee_data_conv5_3"
+  top: "ee_data_conv5_3"
+}
+layer {
+  name: "dem_relu5_3"
+  type: "ReLU"
+  bottom: "ee_dem_conv5_3"
+  top: "ee_dem_conv5_3"
+}
+
+#################### DSN-1 ####################
+
+layer {
+  name: "dsn-1-fuse"
+  type: "Concat"
+  bottom: "ee_data_conv1_2"
+  bottom: "ee_dem_conv1_2"
+  top: "score-dsn1-merge"
+  concat_param {
+    concat_dim: 1
+  }
+}
+layer {
+  name: "edge_score-dsn1"
+  type: "Convolution"
+  bottom: "score-dsn1-merge"
+  top: "score-dsn1-up"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+layer {
+  name: "crop"
+  type: "Crop"
+  bottom: "score-dsn1-up"
+  bottom: "image"
+  top: "score-dsn1"
+  crop_param {
+      axis: 2
+       #offset: 0
+       offset: 34
+       offset: 34
+  }
+}
+
+#layer { name: "loss-dns1"   type: "EuclideanLoss" bottom: "score-dsn1" bottom: "edge-label" top: "dsn1_loss" loss_weight: 1 }
+
+#################### DSN-2 #################### 
+
+layer {
+  name: "dsn-2-fuse"
+  type: "Concat"
+  bottom: "ee_data_conv2_2"
+  bottom: "ee_dem_conv2_2"
+  top: "score-dsn2-merge"
+  concat_param {
+    concat_dim: 1
+  }
+}
+layer {
+  name: "edge_score-dsn2"
+  type: "Convolution"
+  bottom: "score-dsn2-merge"
+  top: "score-dsn2_"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_upsample_2"
+  type: "Deconvolution"
+  bottom: "score-dsn2_"
+  top: "score-dsn2-up"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 4
+    stride: 2
+  }
+}
+layer {
+  name: "crop"
+  type: "Crop"
+  bottom: "score-dsn2-up"
+  bottom: "image"
+  top: "score-dsn2"
+  crop_param {
+      axis: 2
+      #offset: 0
+      offset: 35
+      offset: 35
+  }
+}
+
+#layer { name: "loss-dns2" type: "EuclideanLoss" bottom: "score-dsn2" bottom: "edge-label" top: "dsn2_loss" loss_weight: 1}
+
+#################### DSN-3 ####################
+
+layer {
+  name: "dsn-3-fuse"
+  type: "Concat"
+  bottom: "ee_data_conv3_3"
+  bottom: "ee_dem_conv3_3"
+  top: "score-dsn3-merge"
+  concat_param {
+    concat_dim: 1
+  }
+}
+layer {
+  name: "edge_score-dsn3"
+  type: "Convolution"
+  bottom: "score-dsn3-merge"
+  top: "score-dsn3_"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_upsample_4"
+  type: "Deconvolution"
+  bottom: "score-dsn3_"
+  top: "score-dsn3-up"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 8
+    stride: 4
+  }
+}
+layer {
+  name: "crop"
+  type: "Crop"
+  bottom: "score-dsn3-up"
+  bottom: "image"
+  top: "score-dsn3"
+  crop_param {
+      axis: 2
+      #offset: 0
+      offset: 36
+      offset: 36
+  }
+}
+
+#layer { name: "loss-dns3" type: "EuclideanLoss" bottom: "score-dsn3" bottom: "edge-label" top: "dsn3_loss" loss_weight: 1}
+
+
+#################### DSN-4 ####################
+
+layer {
+  name: "dsn-4-fuse"
+  type: "Concat"
+  bottom: "ee_data_conv4_3"
+  bottom: "ee_dem_conv4_3"
+  top: "score-dsn4-merge"
+  concat_param {
+    concat_dim: 1
+  }
+}
+layer {
+  name: "edge_score-dsn4"
+  type: "Convolution"
+  bottom: "score-dsn4-merge"
+  top: "score-dsn4_"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_upsample_8"
+  type: "Deconvolution"
+  bottom: "score-dsn4_"
+  top: "score-dsn4-up"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 16
+    stride: 8
+  }
+}
+layer {
+  name: "crop"
+  type: "Crop"
+  bottom: "score-dsn4-up"
+  bottom: "image"
+  top: "score-dsn4"
+  crop_param {
+      axis: 2
+      #offset: 0
+      offset: 40
+      offset: 40
+  }
+}
+
+#layer { name: "loss-dns4" type: "EuclideanLoss" bottom: "score-dsn4" bottom: "edge-label" top: "dsn4_loss" loss_weight: 1}
+
+
+#################### DSN-5 ####################
+
+layer {
+  name: "dsn-5-fuse"
+  type: "Concat"
+  bottom: "ee_data_conv5_3"
+  bottom: "ee_dem_conv5_3"
+  top: "score-dsn5-merge"
+  concat_param {
+    concat_dim: 1
+  }
+}
+layer {
+  name: "edge_score-dsn5"
+  type: "Convolution"
+  bottom: "score-dsn5-merge"
+  top: "score-dsn5_"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+layer {
+  name: "edge_upsample_16"
+  type: "Deconvolution"
+  bottom: "score-dsn5_"
+  top: "score-dsn5-up"
+  param {
+    lr_mult: 0 # 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 32
+    stride: 16
+  }
+}
+layer {
+  name: "crop"
+  type: "Crop"
+  bottom: "score-dsn5-up"
+  bottom: "image"
+  top: "score-dsn5"
+  crop_param {
+      axis: 2
+      #offset: 0
+      offset: 48
+      offset: 48
+  }
+}
+
+#layer { name: "loss-dns5" type: "EuclideanLoss" bottom: "score-dsn5"  bottom: "edge-label" top: "dsn5_loss" loss_weight: 1 }
+
+
+#################### FUSE DSN ####################
+
+layer {
+  name: "concat"
+  type: "Concat"
+  bottom: "score-dsn1"
+  bottom: "score-dsn2"
+  bottom: "score-dsn3"
+  bottom: "score-dsn4"
+  bottom: "score-dsn5"
+  top: "concat-score"
+  concat_param {
+    concat_dim: 1
+  }
+}
+layer {
+  name: "edge_new-score-weighting"
+  type: "Convolution"
+  bottom: "concat-score"
+  top: "edge"
+  param {
+    lr_mult: 0 # 1 
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0 # 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+
+#layer { name: "edge-loss" type: "EuclideanLoss" bottom: "edge" bottom: "edge-label" top: "edge-loss" loss_weight: 1 }
+
+
+###################################################################################################
+############################## Concatenate Edges to Train Data  ###################################
+###################################################################################################
+
+layer {
+  name: "annotation-image-data"
+  type: "Concat"
+  bottom: "image"
+  bottom: "edge"
+  top: "data-and-edges"
+}
+
+layer {
+  name: "annotation-dem-data"
+  type: "Concat"
+  bottom: "dem"
+  bottom: "edge"
+  top: "dem-and-edges"
+}
+
+
+###################################################################################################
+ ############################# Trainable Annotation Network  ####################################
+###################################################################################################
+
+
+layer {
+  name: "conv1_1"
+  type: "Convolution"
+  bottom: "data-and-edges"
+  top: "conv1_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 100
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {type: "xavier"}
+    bias_filler { type: "constant"}
+  }
+}
+
+layer {
+  name: "dem_conv1_1"
+  type: "Convolution"
+  bottom: "dem-and-edges"
+  top: "dem_conv1_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 100
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu1_1"
+  type: "ReLU"
+  bottom: "conv1_1"
+  top: "conv1_1"
+}
+
+layer {
+  name: "dem_relu1_1"
+  type: "ReLU"
+  bottom: "dem_conv1_1"
+  top: "dem_conv1_1"
+}
+
+#########################################
+
+layer {
+  name: "conv1_2"
+  type: "Convolution"
+  bottom: "conv1_1"
+  top: "conv1_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv1_2_"
+  type: "Convolution"
+  bottom: "dem_conv1_1"
+  top: "dem_conv1_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu1_2"
+  type: "ReLU"
+  bottom: "conv1_2"
+  top: "conv1_2"
+}
+
+layer {
+  name: "dem_relu1_2"
+  type: "ReLU"
+  bottom: "dem_conv1_2"
+  top: "dem_conv1_2"
+}
+
+#########################################
+
+layer {
+  name: "pool1"
+  type: "Pooling"
+  bottom: "conv1_2"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+layer {
+  name: "dem_pool1"
+  type: "Pooling"
+  bottom: "dem_conv1_2"
+  top: "dem_pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+
+################# Deep Supervision 1 #################
+
+# layer { name: "ds_conv1" type: "Convolution"  bottom: "conv1_2" top: "ds_conv1" param { lr_mult: 2  decay_mult: 1}
+#  param { lr_mult: 2 decay_mult: 0 } convolution_param { num_output: 1 pad: 0 kernel_size: 1 engine: CUDNN }}
+
+# layer { type: "Crop" name: "crop1" bottom: "ds_conv1" bottom: "image" top: "ds_conv1c" }
+
+# layer { name: "ds_loss1" type: "EuclideanLoss" bottom: "ds_conv1c" bottom: "label" top: "ds_loss1" loss_weight: 1}
+
+
+############################   CONV 2   ############################
+
+layer {
+  name: "conv2_1"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv2_1_"
+  type: "Convolution"
+  bottom: "dem_pool1"
+  top: "dem_conv2_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+
+  convolution_param {
+    num_output: 128
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu2_1"
+  type: "ReLU"
+  bottom: "conv2_1"
+  top: "conv2_1"
+}
+
+layer {
+  name: "dem_relu2_1"
+  type: "ReLU"
+  bottom: "dem_conv2_1"
+  top: "dem_conv2_1"
+}
+
+#########################################
+
+layer {
+  name: "conv2_2"
+  type: "Convolution"
+  bottom: "conv2_1"
+  top: "conv2_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv2_2_"
+  type: "Convolution"
+  bottom: "dem_conv2_1"
+  top: "dem_conv2_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu2_2"
+  type: "ReLU"
+  bottom: "conv2_2"
+  top: "conv2_2"
+}
+
+layer {
+  name: "dem_relu2_2"
+  type: "ReLU"
+  bottom: "dem_conv2_2"
+  top: "dem_conv2_2"
+}
+
+
+#########################################
+
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2_2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+layer {
+  name: "dem_pool2"
+  type: "Pooling"
+  bottom: "dem_conv2_2"
+  top: "dem_pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+# ################# Deep Supervision 2 #################
+
+layer {
+  name: "ds_conv2"
+  type: "Convolution"
+  bottom: "conv2_2"
+  top: "ds_conv2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 5
+    pad: 0
+    kernel_size: 1
+    engine: CUDNN
+  weight_filler {
+    type: "xavier"
+  }
+  bias_filler {
+    type: "constant"
+  }
+ }
+}
+
+layer {
+    type: "Deconvolution"
+    name: 'ds_deconv2'
+    bottom: 'ds_conv2'
+    top: 'ds_deconv2'
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    kernel_size: 4
+    stride: 2
+    num_output: 5
+    weight_filler: {
+      type: "bilinear"
+    }
+  }
+}
+
+layer { 
+      type: "Crop" 
+      name: "crop2" 
+      bottom: "ds_deconv2" 
+      bottom: "image" 
+      top: "ds_deconv2c" 
+      crop_param {
+          axis: 2
+          offset: 102
+          offset: 102
+      }
+}
+
+layer { 
+      name: "ds_prob2" 
+      type: "Softmax" 
+      bottom: "ds_deconv2c" 
+      top: "ds_prob2"
+}
+
+############################# CONV3  ############################
+
+layer {
+  name: "conv3_1"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "conv3_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv3_1_"
+  type: "Convolution"
+  bottom: "dem_pool2"
+  top: "dem_conv3_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu3_1"
+  type: "ReLU"
+  bottom: "conv3_1"
+  top: "conv3_1"
+}
+
+layer {
+  name: "dem_relu3_1"
+  type: "ReLU"
+  bottom: "dem_conv3_1"
+  top: "dem_conv3_1"
+}
+
+
+#########################################
+
+layer {
+  name: "conv3_2"
+  type: "Convolution"
+  bottom: "conv3_1"
+  top: "conv3_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv3_2_"
+  type: "Convolution"
+  bottom: "dem_conv3_1"
+  top: "dem_conv3_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu3_2"
+  type: "ReLU"
+  bottom: "conv3_2"
+  top: "conv3_2"
+}
+
+layer {
+  name: "dem_relu3_2"
+  type: "ReLU"
+  bottom: "dem_conv3_2"
+  top: "dem_conv3_2"
+}
+
+#########################################
+
+layer {
+  name: "conv3_3"
+  type: "Convolution"
+  bottom: "conv3_2"
+  top: "conv3_3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv3_3_"
+  type: "Convolution"
+  bottom: "dem_conv3_2"
+  top: "dem_conv3_3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu3_3"
+  type: "ReLU"
+  bottom: "conv3_3"
+  top: "conv3_3"
+}
+
+layer {
+  name: "dem_relu3_3"
+  type: "ReLU"
+  bottom: "dem_conv3_3"
+  top: "dem_conv3_3"
+}
+
+#########################################
+
+layer {
+  name: "pool3"
+  type: "Pooling"
+  bottom: "conv3_3"
+  top: "pool3"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+layer {
+  name: "dem_pool3"
+  type: "Pooling"
+  bottom: "dem_conv3_3"
+  top: "dem_pool3"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+
+################# Deep Supervision 3 #################
+
+ layer {
+   name: "ds_conv3_"
+   type: "Convolution"
+   bottom: "conv3_3"
+   top: "ds_conv3"
+   param {
+     lr_mult: 1
+     decay_mult: 1
+   }
+   param {
+     lr_mult: 2
+     decay_mult: 0
+   }
+   convolution_param {
+     num_output: 5
+     pad: 0
+     kernel_size: 1
+     weight_filler {
+       type: "xavier"
+     }
+     bias_filler {
+       type: "constant"
+     }
+     engine: CUDNN
+   }
+ }
+
+ layer {
+     name: 'ds_deconv3_'
+     type: "Deconvolution"
+     bottom: 'ds_conv3'
+     top: 'ds_deconv3'
+   param {
+     lr_mult: 5
+     decay_mult: 1
+   }
+   param {
+     lr_mult: 5
+     decay_mult: 0
+   }
+   convolution_param {
+     kernel_size: 8
+     stride: 4
+     num_output: 5
+     weight_filler: {
+       type: "bilinear"
+     }
+   }
+ }
+
+ layer { 
+       type: "Crop" 
+       name: "crop3" 
+       bottom: "ds_deconv3" 
+       bottom: "image" 
+       top: "ds_deconv3c" 
+       crop_param {
+          axis: 2
+          offset: 102
+          offset: 102
+      }
+}
+
+layer { 
+       name: "ds_prob3" 
+       type: "Softmax" 
+       bottom: "ds_deconv3c" 
+       top: "ds_prob3" 
+}
+
+
+#########################  CONV4 #############################
+
+layer {
+  name: "conv4_1"
+  type: "Convolution"
+  bottom: "pool3"
+  top: "conv4_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv4_1_"
+  type: "Convolution"
+  bottom: "dem_pool3"
+  top: "dem_conv4_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+
+#########################################
+
+layer {
+  name: "relu4_1"
+  type: "ReLU"
+  bottom: "conv4_1"
+  top: "conv4_1"
+}
+
+layer {
+  name: "dem_relu4_1"
+  type: "ReLU"
+  bottom: "dem_conv4_1"
+  top: "dem_conv4_1"
+}
+
+
+#########################################
+
+layer {
+  name: "conv4_2"
+  type: "Convolution"
+  bottom: "conv4_1"
+  top: "conv4_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv4_2_"
+  type: "Convolution"
+  bottom: "dem_conv4_1"
+  top: "dem_conv4_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+
+#########################################
+
+layer {
+  name: "relu4_2"
+  type: "ReLU"
+  bottom: "conv4_2"
+  top: "conv4_2"
+}
+
+layer {
+  name: "dem_relu4_2"
+  type: "ReLU"
+  bottom: "dem_conv4_2"
+  top: "dem_conv4_2"
+}
+
+
+#########################################
+
+layer {
+  name: "conv4_3"
+  type: "Convolution"
+  bottom: "conv4_2"
+  top: "conv4_3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv4_3_"
+  type: "Convolution"
+  bottom: "dem_conv4_2"
+  top: "dem_conv4_3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu4_3"
+  type: "ReLU"
+  bottom: "conv4_3"
+  top: "conv4_3"
+}
+
+layer {
+  name: "dem_relu4_3"
+  type: "ReLU"
+  bottom: "dem_conv4_3"
+  top: "dem_conv4_3"
+}
+
+
+#########################################
+
+layer {
+  name: "pool4"
+  type: "Pooling"
+  bottom: "conv4_3"
+  top: "pool4"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+layer {
+  name: "dem_pool4"
+  type: "Pooling"
+  bottom: "dem_conv4_3"
+  top: "dem_pool4"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+################# Deep Supervision 4 #################
+
+ layer {
+   name: "ds_conv4_"
+   type: "Convolution"
+   bottom: "conv4_3"
+   top: "ds_conv4"
+   param {
+     lr_mult: 1
+     decay_mult: 1
+   }
+   param {
+     lr_mult: 2
+     decay_mult: 0
+   }
+   convolution_param {
+     num_output: 5
+     pad: 0
+     kernel_size: 1
+     weight_filler {
+       type: "xavier"
+     }
+     bias_filler {
+       type: "constant"
+     }
+     engine: CUDNN
+   }
+ }
+
+ layer {
+     name: 'ds_deconv4_'
+     type: "Deconvolution"
+     bottom: 'ds_conv4'
+     top: 'ds_deconv4'
+   param {
+     lr_mult: 5
+     decay_mult: 1
+   }
+   param {
+     lr_mult: 5
+     decay_mult: 0
+   }
+   convolution_param {
+     kernel_size: 16
+     stride: 8
+     num_output: 5
+     weight_filler: {
+       type: "bilinear"
+     }
+   }
+ }
+
+layer { 
+      type: "Crop" 
+      name: "crop4" 
+      bottom: "ds_deconv4" 
+      bottom: "image" 
+      top: "ds_deconv4c" 
+       crop_param {
+          axis: 2
+          offset: 104
+          offset: 104
+      }
+}
+
+layer { 
+      name: "ds_prob4" 
+      type: "Softmax" 
+      bottom: "ds_deconv4c" 
+      top: "ds_prob4" 
+}
+
+
+########################################## CONV 5 ##########################################
+
+layer {
+  name: "conv5_1"
+  type: "Convolution"
+  bottom: "pool4"
+  top: "conv5_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv5_1_"
+  type: "Convolution"
+  bottom: "dem_pool4"
+  top: "dem_conv5_1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+
+#########################################
+
+layer {
+  name: "relu5_1"
+  type: "ReLU"
+  bottom: "conv5_1"
+  top: "conv5_1"
+}
+
+layer {
+  name: "dem_relu5_1"
+  type: "ReLU"
+  bottom: "dem_conv5_1"
+  top: "dem_conv5_1"
+}
+
+#########################################
+
+layer {
+  name: "conv5_2"
+  type: "Convolution"
+  bottom: "conv5_1"
+  top: "conv5_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv5_2_"
+  type: "Convolution"
+  bottom: "dem_conv5_1"
+  top: "dem_conv5_2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+	
+#########################################
+
+layer {
+  name: "relu5_2"
+  type: "ReLU"
+  bottom: "conv5_2"
+  top: "conv5_2"
+}
+
+layer {
+  name: "dem_relu5_2"
+  type: "ReLU"
+  bottom: "dem_conv5_2"
+  top: "dem_conv5_2"
+}
+
+#########################################
+
+layer {
+  name: "conv5_3"
+  type: "Convolution"
+  bottom: "conv5_2"
+  top: "conv5_3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_conv5_3_"
+  type: "Convolution"
+  bottom: "dem_conv5_2"
+  top: "dem_conv5_3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu5_3"
+  type: "ReLU"
+  bottom: "conv5_3"
+  top: "conv5_3"
+}
+
+layer {
+  name: "dem_relu5_3"
+  type: "ReLU"
+  bottom: "dem_conv5_3"
+  top: "dem_conv5_3"
+}
+
+
+#########################################
+
+layer {
+  name: "pool5"
+  type: "Pooling"
+  bottom: "conv5_3"
+  top: "pool5"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+layer {
+  name: "dem_pool5"
+  type: "Pooling"
+  bottom: "dem_conv5_3"
+  top: "dem_pool5"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+################# Deep Supervision 5 #################
+
+  layer {
+  name: "ds_conv5_"
+  type: "Convolution"
+  bottom: "conv5_3"
+  top: "ds_conv5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 5
+    pad: 0
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+layer {
+    name: 'ds_deconv5_'
+    type: "Deconvolution"
+    bottom: 'ds_conv5'
+    top: 'ds_deconv5'
+  param {
+    lr_mult: 5
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 5
+    decay_mult: 0
+  }
+  convolution_param {
+    kernel_size: 32
+    stride: 16
+    num_output: 5
+    weight_filler: {
+      type: "bilinear"
+    }
+  }
+}
+
+layer { 
+      type: "Crop" 
+      name: "crop5" 
+      bottom: "ds_deconv5" 
+      bottom: "image" 
+      top: "ds_deconv5c"
+       crop_param {
+          axis: 2
+          offset: 112
+          offset: 112
+      }
+ }
+
+layer { 
+      name: "ds_prob5" 
+      type: "Softmax" 
+      bottom: "ds_deconv5c" 
+      top: "ds_prob5" 
+}
+
+
+
+######################################### FCN #########################################
+
+layer {
+  name: "fc6"
+  type: "Convolution"
+  bottom: "pool5"
+  top: "fc6"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 4096
+    kernel_size: 7
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_fc6"
+  type: "Convolution"
+  bottom: "dem_pool5"
+  top: "dem_fc6"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 4096
+    kernel_size: 7
+    engine: CUDNN
+  }
+}
+
+#########################################
+
+layer {
+  name: "relu6"
+  type: "ReLU"
+  bottom: "fc6"
+  top: "fc6"
+}
+
+layer {
+  name: "dem_relu6"
+  type: "ReLU"
+  bottom: "dem_fc6"
+  top: "dem_fc6"
+}
+
+#########################################
+
+layer {
+  name: "drop6"
+  type: "Dropout"
+  bottom: "fc6"
+  top: "fc6"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "dem_drop6"
+  type: "Dropout"
+  bottom: "dem_fc6"
+  top: "dem_fc6"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+
+#########################################
+
+layer {
+  name: "fc7"
+  type: "Convolution"
+  bottom: "fc6"
+  top: "fc7"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 4096
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem_fc7"
+  type: "Convolution"
+  bottom: "dem_fc6"
+  top: "dem_fc7"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 4096
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+
+
+#########################################
+
+layer {
+  name: "relu7"
+  type: "ReLU"
+  bottom: "fc7"
+  top: "fc7"
+}
+
+layer {
+  name: "dem_relu7"
+  type: "ReLU"
+  bottom: "dem_fc7"
+  top: "dem_fc7"
+}
+
+#########################################
+
+layer {
+  name: "drop7"
+  type: "Dropout"
+  bottom: "fc7"
+  top: "fc7"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "dem_drop7"
+  type: "Dropout"
+  bottom: "dem_fc7"
+  top: "dem_fc7"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+
+######################################### FCN-16 ################################################
+
+layer {
+  name: "score59"
+  type: "Convolution"
+  bottom: "fc7"
+  top: "score59"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 60
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem-score59"
+  type: "Convolution"
+  bottom: "dem_fc7"
+  top: "dem-score59"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 60
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "upscore16_"
+  type: "Deconvolution"
+  bottom: "score59"
+  top: "upscore16"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 5
+    kernel_size: 2
+    stride: 2
+    weight_filler: { type: "bilinear" } 
+    bias_filler { type: "gaussian" std: 0.2 }
+  }
+}
+
+layer {
+  name: "dem-upscore16_"
+  type: "Deconvolution"
+  bottom: "dem-score59"
+  top: "dem-upscore16"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 5
+    kernel_size: 2
+    stride: 2
+    weight_filler: { type: "bilinear" } 
+    bias_filler { type: "gaussian" std: 0.2 }
+  }
+}
+
+layer {
+  name: "score-pool4_"
+  type: "Convolution"
+  bottom: "pool4"
+  top: "score-pool4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 5
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem-score-pool4_"
+  type: "Convolution"
+  bottom: "dem_pool4"
+  top: "dem-score-pool4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 5
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+
+layer { 
+      type: 'Crop' 
+      name: 'crop-upscore16' 
+      bottom: 'score-pool4' 
+      bottom: 'upscore16' 
+      top: 'score-pool4c'
+      crop_param {
+          axis: 1
+	  offset: 0
+	  offset: 5
+	  offset: 5
+      }
+}
+
+layer { 
+      type: 'Crop' 
+      name: 'dem-crop-upscore16' 
+      bottom: 'dem-score-pool4' 
+      bottom: 'dem-upscore16' 
+      top: 'dem-score-pool4c'
+      crop_param {
+          axis: 1
+	  offset: 0
+	  offset: 5
+	  offset: 5
+       }
+}
+########################################## FCN-8 #######################################
+
+layer {
+  name: "fuse-pool4"
+  type: "Eltwise"
+  bottom: "upscore16"
+  bottom: "score-pool4c"
+  top: "score-fused-pool4"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "dem-fuse-pool4"
+  type: "Eltwise"
+  bottom: "dem-upscore16"
+  bottom: "dem-score-pool4c"
+  top: "dem-score-fused-pool4"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "upscore8_"
+  type: "Deconvolution"
+  bottom: "score-fused-pool4"
+  top: "upscore8"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 5
+    bias_term: false
+    kernel_size: 1 # 4
+    stride: 2 # 2
+    weight_filler: { type: "bilinear" } 
+    bias_filler { type: "gaussian" std: 0.2 }
+  }
+}
+
+layer {
+  name: "dem-upscore8_"
+  type: "Deconvolution"
+  bottom: "dem-score-fused-pool4"
+  top: "dem-upscore8"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 5
+    bias_term: false
+    kernel_size: 1
+    stride: 2
+    weight_filler: { type: "bilinear" } 
+    bias_filler { type: "gaussian" std: 0.2 }
+  }
+}
+
+layer {
+  name: "score-pool3_"
+  type: "Convolution"
+  bottom: "pool3"
+  top: "score-pool3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 5
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem-score-pool3_"
+  type: "Convolution"
+  bottom: "dem_pool3"
+  top: "dem-score-pool3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 5
+    kernel_size: 1
+    engine: CUDNN
+  }
+}
+
+layer { 
+      type: 'Crop' 
+      name: 'crop-upscore8' 
+      bottom: 'score-pool3' 
+      bottom: 'upscore8' 
+      top: 'score-pool3c'
+      crop_param {
+          axis: 2
+	  offset: 11
+	  offset: 11
+     }
+}
+
+layer { 
+      type: 'Crop' 
+      name: 'dem-crop-upscore8' 
+      bottom: 'dem-score-pool3' 
+      bottom: 'dem-upscore8' 
+      top: 'dem-score-pool3c' 
+      crop_param {
+          axis: 2
+	  offset: 11
+	  offset: 11
+     }
+}
+
+########################################################################################################
+
+layer {
+  name: "fuse-pool3"
+  type: "Eltwise"
+  bottom: "upscore8"
+  bottom: "score-pool3c"
+  top: "score-fused-pool3"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "dem-fuse-pool3"
+  type: "Eltwise"
+  bottom: "dem-upscore8"
+  bottom: "dem-score-pool3c"
+  top: "dem-score-fused-pool3"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+########################################## FCN-4 #######################################
+
+layer {
+  name: "upscore4_"
+  type: "Deconvolution"
+  bottom: "score-fused-pool3"
+  top: "upscore4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 5
+    bias_term: false
+    kernel_size: 2
+    stride: 2
+    pad: 2
+    weight_filler: { type: "bilinear" } 
+    bias_filler { type: "gaussian" std: 0.2 }
+  }
+}
+
+layer {
+  name: "dem-upscore4_"
+  type: "Deconvolution"
+  bottom: "dem-score-fused-pool3"
+  top: "dem-upscore4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 5
+    bias_term: false
+    kernel_size: 2
+    stride: 2
+    pad: 2
+    weight_filler: { type: "bilinear" } 
+    bias_filler { type: "gaussian" std: 0.2 }
+  }
+}
+
+
+layer {
+  name: "score-pool2_"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "score-pool2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 5
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer {
+  name: "dem-score-pool2_"
+  type: "Convolution"
+  bottom: "dem_pool2"
+  top: "dem-score-pool2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 5
+    pad: 1
+    kernel_size: 3
+    engine: CUDNN
+  }
+}
+
+layer { 
+      type: 'Crop' 
+      name: 'crop-upscore4'  
+      bottom: 'score-pool2' 
+      bottom: 'upscore4' 
+      top: 'score-pool2c'
+      crop_param {
+          axis: 2
+	  offset: 24
+	  offset: 24
+     }
+}
+
+
+layer { 
+      type: 'Crop' 
+      name: 'dem-crop-upscore4' 
+      bottom: 'dem-score-pool2' 
+      bottom: 'dem-upscore4' 
+      top: 'dem-score-pool2c' 
+      crop_param {
+          axis: 2
+	  offset: 24
+	  offset: 24
+     }
+}
+
+#########################################################################################################
+
+layer {
+  name: "fuse-pool2"
+  type: "Eltwise"
+  bottom: "upscore4"
+  bottom: "score-pool2c"
+  top: "final"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "dem-fuse-pool2"
+  type: "Eltwise"
+  bottom: "dem-upscore4"
+  bottom: "dem-score-pool2c"
+  top: "dem-final"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+# ================================= #
+
+layer {
+  name: "final"
+  type: "Concat"
+  bottom: "final"
+  bottom: "dem-final"
+  top: "final-merged"
+}
+
+########################################## FINAL #######################################
+
+layer {
+  name: "conv-fcn"
+  type: "Deconvolution"
+  bottom: "final-merged"
+  top: "bigscore"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 5
+    bias_term: true
+    kernel_size: 16
+    stride: 4
+    weight_filler: { type: "bilinear" } 
+    bias_filler { type: "gaussian" std: 0.2 }
+  }
+}
+
+layer {
+  name: "relu_fcn"
+  type: "ReLU"
+  bottom: "bigscore"
+  top: "score-fcn_"
+}
+
+layer { 
+      type: 'Crop' 
+      name: 'crop' 
+      bottom: 'score-fcn_' 
+      bottom: 'image' 
+      top: 'score-fcn'
+      crop_param {
+          axis: 2
+	  offset: 20
+	  offset: 20
+      }
+}
+
+# ============== LOSS FCN ================= #
+
+layer {
+  name: "prob-fcn"
+  type: "Softmax"
+  bottom: "score-fcn"
+  top: "prob-fcn"
+}
+
+# ====================================== DS SCORE FUSS ================================== #
+
+
+layer {
+    bottom: "edge"
+    top: "sedge"
+    name: "scale_edge"
+    type: "Scale"
+    scale_param {
+        bias_term: true
+    }
+}
+
+layer {
+  name: "ds-concat"
+  type: "Concat"
+  bottom: "score-fcn"
+  bottom: "ds_deconv5c"
+  bottom: "ds_deconv4c"
+  bottom: "ds_deconv3c"
+  bottom: "ds_deconv2c"
+  bottom: "sedge"
+  top: "fuse-score"
+  concat_param {
+    axis: 1
+  }
+}
+
+layer {
+  name: "fuse-conv-scores"
+  type: "Convolution"
+  bottom: "fuse-score"
+  top: "score-3x3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 10
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+    }
+    engine: CUDNN
+  }
+}
+layer {
+  name: "relu-fuse-conv-scores"
+  type: "ReLU"
+  bottom: "score-3x3"
+  top: "score-3x3"
+}
+
+
+ layer {
+  name: "ds-scores_"
+  type: "Convolution"
+  bottom: "score-3x3"
+  top: "score"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  #param {
+  #  lr_mult: 2
+  #}
+  convolution_param {
+    num_output: 5
+    bias_term: false
+    kernel_size: 1
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+   }
+  }
+}
+
+# ====================================== CLASSIFICATION ===================================== #
+
+layer {
+  name: "prob"
+  type: "Softmax"
+  bottom: "score"
+  top: "prob"
+}
