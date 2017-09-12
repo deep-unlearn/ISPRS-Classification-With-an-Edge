@@ -23,11 +23,11 @@
  
  If you make use of the code please cite the following work:
 
-  @article{marmanis2016classification,
-  title={Classification with an edge: improving semantic image segmentation with boundary detection},
-  author={Marmanis, Dimitrios and Schindler, Konrad and Wegner, Jan Dirk and Galliani, Silvano and Datcu, Mihai and Stilla, Uwe},
-  journal={arXiv preprint arXiv:1612.01337},
-  year={2016}
-  }
+   @article{marmanis2016classification,
+    title={Classification with an edge: improving semantic image segmentation with boundary detection},
+     author={Marmanis, Dimitrios and Schindler, Konrad and Wegner, Jan Dirk and Galliani, Silvano and Datcu, Mihai and Stilla, Uwe},
+     journal={arXiv preprint arXiv:1612.01337},
+     year={2016}
+   }
 
  
